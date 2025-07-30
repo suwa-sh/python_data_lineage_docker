@@ -123,7 +123,41 @@ git clone https://github.com/sqlparser/python_data_lineage.git
 - No database connection is needed.
 - No internet connection is needed.
 
-You only need a JDK and a python interpreter to run the Gudu SQLFlow lite version for python. 
+You only need a JDK and a python interpreter to run the Gudu SQLFlow lite version for python.
+
+## Docker Usage
+
+You can also use the Docker version which includes all necessary dependencies pre-installed.
+
+### Pull and run the Docker image
+
+```bash
+# Pull the image from GitHub Container Registry
+docker pull ghcr.io/suwa-sh/python_data_lineage_docker:latest
+
+# Run with web UI (starts HTTP server on port 8000)
+docker run -d -p 8000:8000 --name sqlflow ghcr.io/suwa-sh/python_data_lineage_docker:latest
+
+# Access the web UI at http://localhost:8000
+```
+
+### Execute data lineage analysis
+
+```bash
+# Run analysis directly
+docker run -it --rm ghcr.io/suwa-sh/python_data_lineage_docker:latest python3 dlineage.py /t oracle /f test.sql /graph
+
+# Run analysis with your own SQL files (mount local directory)
+docker run -it --rm -p 8000:8000 -v /path/to/your/sql:/app/sql ghcr.io/suwa-sh/python_data_lineage_docker:latest python3 dlineage.py /t oracle /f sql/your_file.sql /graph
+
+# Execute command in running container
+docker exec -it sqlflow python3 dlineage.py /t oracle /f test.sql /graph
+```
+
+### Docker advantages
+- No need to install Java JDK or Python dependencies locally
+- Consistent environment across different operating systems
+- Easy deployment and sharing 
 
 ### Step 1: Prerequisites
   * Install python3
