@@ -1,14 +1,20 @@
-FROM openjdk:8-jdk
+FROM python:3.6-slim
 
 WORKDIR /app
 
+# OpenJDK 11と、JPypeのビルドに必要なツールをインストール
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
+    openjdk-11-jdk \
+    gcc \
+    g++ \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --no-cache-dir --upgrade pip && \
-    python3 -m pip install --no-cache-dir JPype1
+# JAVA_HOMEを設定
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+RUN python -m pip install --no-cache-dir --upgrade pip && \
+    python -m pip install --no-cache-dir JPype1==1.3.0
 
 COPY . /app/
 
