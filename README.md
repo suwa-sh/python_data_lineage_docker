@@ -145,13 +145,13 @@ docker run -d -p 8000:8000 --name sqlflow ghcr.io/suwa-sh/python_data_lineage_do
 
 ```bash
 # Run analysis directly
-docker run -it --rm ghcr.io/suwa-sh/python_data_lineage_docker:latest python3 dlineage.py /t oracle /f test.sql /graph
+docker run -it --rm ghcr.io/suwa-sh/python_data_lineage_docker:latest /t oracle /f test.sql /graph
 
 # Run analysis with your own SQL files (mount local directory)
-docker run -it --rm -p 8000:8000 -v /path/to/your/sql:/app/sql ghcr.io/suwa-sh/python_data_lineage_docker:latest python3 dlineage.py /t oracle /f sql/your_file.sql /graph
+docker run -it --rm -v /path/to/your/sql:/app/sql ghcr.io/suwa-sh/python_data_lineage_docker:latest /t oracle /f sql/your_file.sql /graph
 
 # Execute command in running container
-docker exec -it sqlflow python3 dlineage.py /t oracle /f test.sql /graph
+docker exec -it sqlflow /t oracle /f test.sql /graph
 ```
 
 ### Docker advantages
