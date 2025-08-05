@@ -16,8 +16,10 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
+COPY requirements.txt .
+
 RUN python -m pip install --no-cache-dir --upgrade pip && \
-    python -m pip install --no-cache-dir JPype1==1.3.0
+    python -m pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 

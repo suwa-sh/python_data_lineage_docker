@@ -1,295 +1,148 @@
-## Gudu SQLFlow Lite version for python
+# Gudu SQLFlow Lite version for docker
 
-[Gudu SQLFlow](https://sqlflow.gudusoft.com)  is a tool used to analyze SQL statements and stored procedures 
-of various databases to obtain complex [data lineage](https://en.wikipedia.org/wiki/Data_lineage) relationships and visualize them.
-
-[Gudu SQLFlow Lite version for python](https://github.com/sqlparser/python_data_lineage) allows Python developers to quickly integrate data lineage analysis and 
-visualization capabilities into their own Python applications. It can also be used in daily work by data scientists to quickly discover 
-data lineage from complex SQL scripts that usually used in ETL jobs do the data transform in a huge data platform. 
-
-Gudu SQLFlow Lite version for python is free for non-commercial use and can handle any complex SQL statements 
-with a length of up to 10k, including support for stored procedures. It supports SQL dialect from more than 
-20 major database vendors such as Oracle, DB2, Snowflake, Redshift, Postgres and so on.
-
-Gudu SQLFlow Lite version for python includes [a Java library](https://www.gudusoft.com/sqlflow-java-library-2/) for analyzing complex SQL statements and 
-stored procedures to retrieve data lineage relationships, [a Python file](https://github.com/sqlparser/python_data_lineage/blob/main/dlineage.py) that utilizes jpype to call the APIs 
-in the Java library, and [a JavaScript library](https://docs.gudusoft.com/4.-sqlflow-widget/get-started) for visualizing data lineage relationships.
-
-Gudu SQLFlow Lite version for python can also automatically extract table and column constraints, 
-as well as relationships between tables and fields, from [DDL scripts exported from the database](https://docs.gudusoft.com/6.-sqlflow-ingester/introduction)
-and generate an ER Diagram.
-
-### Automatically visualize data lineage
-
-By executing this command:
-```
-python dlineage.py /t oracle /f test.sql /graph
-```
-
-We can automatically obtain the data lineage relationships contained in the following Oracle SQL statement.
-```sql
-CREATE VIEW vsal 
-AS 
-  SELECT a.deptno                  "Department", 
-         a.num_emp / b.total_count "Employees", 
-         a.sal_sum / b.total_sal   "Salary" 
-  FROM   (SELECT deptno, 
-                 Count()  num_emp, 
-                 SUM(sal) sal_sum 
-          FROM   scott.emp 
-          WHERE  city = 'NYC' 
-          GROUP  BY deptno) a, 
-         (SELECT Count()  total_count, 
-                 SUM(sal) total_sal 
-          FROM   scott.emp 
-          WHERE  city = 'NYC') b 
-;
-
-INSERT ALL
-	WHEN ottl < 100000 THEN
-		INTO small_orders
-			VALUES(oid, ottl, sid, cid)
-	WHEN ottl > 100000 and ottl < 200000 THEN
-		INTO medium_orders
-			VALUES(oid, ottl, sid, cid)
-	WHEN ottl > 200000 THEN
-		into large_orders
-			VALUES(oid, ottl, sid, cid)
-	WHEN ottl > 290000 THEN
-		INTO special_orders
-SELECT o.order_id oid, o.customer_id cid, o.order_total ottl,
-o.sales_rep_id sid, c.credit_limit cl, c.cust_email cem
-FROM orders o, customers c
-WHERE o.customer_id = c.customer_id;
-```
-
-And visualize it as:
-![Oracle data lineage sample](samples/images/oracle_data_lineage.png)
-
-### Oracle PL/SQL Data Lineage 
-```
-python dlineage.py /t oracle /f samples/oracle_plsql.sql /graph
-```
-
-![Oracle PL/SQL data lineage sample](samples/images/oracle_plsql_data_lineage.png)
-
-The [source code of this sample Oracle PL/SQL](samples/oracle_plsql.sql).
-
-### Able to analyze dynamic SQL to get data lineage (Postgres stored procedure)
-```sql
-CREATE OR REPLACE FUNCTION t.mergemodel(_modelid integer)
-RETURNS void
-LANGUAGE plpgsql
-AS $function$
-BEGIN
-    EXECUTE format ('INSERT INTO InSelections
-                                  SELECT * FROM AddInSelections_%s', modelid);
-                  
-END;
-$function$
-```
-
-![Postgres stored procedure data lineage sample](samples/images/postgresql_plsql_data_lineage.png)
-  
-### Nested CTE with star columns (Snowflake SQL sample)
-```
-python dlineage.py /t snowflake /f samples/snowflake_nested_cte.sql /graph
-```
-
-![Snowflake nested CTE data lineage sample](samples/images/snowflake_nested_cte_data_lineage.png)
-
-The [snowflake SQL source code of this sample](samples/snowflake_nested_cte.sql).  
-
-### Analyze DDL and automatically draw an ER Diagram.
-
-By executing this command:
-```
-python dlineage.py /t sqlserver /f samples/sqlserver_er.sql /graph /er
-```
-
-We can automatically obtain the ER Diagram of the following SQL Server database:
-
-![SQL Sever ER Diagram sample](samples/images/sqlserver_er_diagram.png)
-
-The [DDL script of the above ER diagram is here](samples/sqlserver_er.sql).
-
-## Try your own SQL scripts
-
-You may try more SQL scripts in your own computer without any internet connection by cloning [this python data lineage repo](https://github.com/sqlparser/python_data_lineage)
-```shell
-git clone https://github.com/sqlparser/python_data_lineage.git
-```
-
-- No database connection is needed.
-- No internet connection is needed.
-
-You only need a JDK and a python interpreter to run the Gudu SQLFlow lite version for python.
-
-## Docker Usage
-
-You can also use the Docker version which includes all necessary dependencies pre-installed.
-
-### Pull and run the Docker image
+### サーバー起動
 
 ```bash
-# Pull the image from GitHub Container Registry
-docker pull ghcr.io/suwa-sh/python_data_lineage_docker:latest
+docker run -d \
+  -p 8000:8000 \
+  --name sqlflow \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest
 
-# Run with web UI (starts HTTP server on port 8000)
-docker run -d -p 8000:8000 --name sqlflow ghcr.io/suwa-sh/python_data_lineage_docker:latest
-
-# Access the web UI at http://localhost:8000
+open http://localhost:8000
 ```
 
-### Execute data lineage analysis
+### データリネージ分析
 
 ```bash
-# Run analysis directly
-docker run -it --rm ghcr.io/suwa-sh/python_data_lineage_docker:latest /t oracle /f test.sql /graph
+docker run -it --rm \
+  -v /path/to/your/sql:/app/sql \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  /t oracle /f sql/your_file.sql /graph
 
-# Run analysis with your own SQL files (mount local directory)
-docker run -it --rm -v /path/to/your/sql:/app/sql ghcr.io/suwa-sh/python_data_lineage_docker:latest /t oracle /f sql/your_file.sql /graph
-
-# Execute command in running container
-docker exec -it sqlflow /t oracle /f test.sql /graph
+# 実行中のコンテナで起動する場合
+docker exec -it sqlflow \
+  /t oracle /f test.sql /graph
 ```
 
-### Docker advantages
-- No need to install Java JDK or Python dependencies locally
-- Consistent environment across different operating systems
-- Easy deployment and sharing 
+- 引数
 
-### Step 1: Prerequisites
-  * Install python3
-  * Install Java jdk1.8 (openJdk-8 is recommended)
-  
-    Command used to check java version:
+  ```sh
+    /t: Required, specify the database type
+      
+      The valid value: access,bigquery,couchbase,dax,db2,greenplum, gaussdb, hana,hive,impala,informix,mdx,mssql,
+          sqlserver,mysql,netezza,odbc,openedge,oracle,postgresql,postgres,redshift,snowflake,
+          sybase,teradata,soql,vertica 
 
-    `java -version`
-	
-    If the Java is not installed, exexute this command: 
+      the default value is oracle
 
-    `sudo apt install openjdk-8-jdk`
+    /f: optional, The SQL file that needs to be processed, if this option is not specified, /d must be speicified.
 
-    If this error occurs:
+    /d: optional, All SQL files under this directory will be processed.
 
-     `Unable to locate package openjdk-8-jdk`
-    
-     Please execute the following commands:
+    /j: optional, The analyzed result will include the join relationship.
 
-     ```
-     sudo add-apt-repository ppa:openjdk-r/ppa
-     apt-get update
-     sudo apt install openjdk-8-jdk
-     ```
-	 
+    /s: optional, Ignore the intermediate results of the output data lineage.
 
-### Step 2: Open the web service
- Switch to the widget directory of this project and execute the following command to start the web service:
+    /topselectlist: optional, output the column in select list. this option valid only /s is specified.
 
- `python -m http.server 8000`
-  
-  Open the following URL in a web browser to verify if the startup was successful：http://localhost:8000/
-  
-  Note: If you want to modify the port 8000, you need to modify the widget_server_url in dlineage.py accordingly.
+    /withTemporaryTable: optional, only valid use with /s option, including the data lineage of temporary table used in the SQL.
 
-### step 3 Execute the python script
-  Open a new command window, switch to the root directory of this project, where the dlineage.py file is located, and execute the following command:
+    /i: optional, this option work almost the same as /s option, but will keep the data lineage generated by function call.
 
-  `python dlineage.py /t oracle /f test.sql /graph`
-   
-   This command will perform data lineage analysis on test.sql and open a web browser page to display the results of the analysis in a graphical result.
-   
-   Explanations of the command-line parameters supported by dlineage.py:
+    /if: optional, keep all the intermediate result in the output data lineage, but remove the result derived from function call.
 
-      /t: Required, specify the database type
-        
-		The valid value: access,bigquery,couchbase,dax,db2,greenplum, gaussdb, hana,hive,impala,informix,mdx,mssql,
-        sqlserver,mysql,netezza,odbc,openedge,oracle,postgresql,postgres,redshift,snowflake,
-        sybase,teradata,soql,vertica 
-		
-		the default value is oracle
+    /ic: optional, ignore the coordinate in the output.
 
-      /f: optional, The SQL file that needs to be processed, if this option is not specified, /d must be speicified.
+    /lof: optional, if a column in the SQL is not qualifiey with a table name, and multiple tables are used in the from clause, then, the column will be linked to the first table in from clause.
 
-      /d: optional, All SQL files under this directory will be processed.
+    /traceView: optional, only list source table and view, ignore all intermediate result.
 
-      /j: optional, The analyzed result will include the join relationship.
+    /json: optional, ouput in json format.
 
-      /s: optional, Ignore the intermediate results of the output data lineage.
+    /tableLineage [/csv /delimiter]: optional, only output data lineage at table level.
 
-      /topselectlist: optional, output the column in select list. this option valid only /s is specified.
+    /csv: optional, output the data lineage in CSV format.
 
-      /withTemporaryTable: optional, only valid use with /s option, including the data lineage of temporary table used in the SQL.
+    /delimiter: optional, specify the separate character used in CSV output.
 
-      /i: optional, this option work almost the same as /s option, but will keep the data lineage generated by function call.
-  
-      /if: optional, keep all the intermediate result in the output data lineage, but remove the result derived from function call.
+    /env: optional, specify a metadata.json to provide the metadata that can be used during SQL analysis.
 
-      /ic: optional, ignore the coordinate in the output.
+    /transform: optional, includind the code that do the transform.
 
-      /lof: optional, if a column in the SQL is not qualifiey with a table name, and multiple tables are used in the from clause, then, the column will be linked to the first table in from clause.
+    /coor: optional, whether including the coordinate in the output.
 
-      /traceView: optional, only list source table and view, ignore all intermediate result.
+    /defaultDatabase: optional, specify a default database.
 
-      /json: optional, ouput in json format.
+    /defaultSchema: optional, specify a default schema.
 
-      /tableLineage [/csv /delimiter]: optional, only output data lineage at table level.
+    /showImplicitSchema: optional, Display the schema information inferred from the SQL statement.
 
-      /csv: optional, output the data lineage in CSV format.
+    /showConstant: optional, whether show constant.
 
-      /delimiter: optional, specify the separate character used in CSV output.
+    /treatArgumentsInCountFunctionAsDirectDataflow: optional,treate column used in count function as a direct dataflow.
 
-      /env: optional, specify a metadata.json to provide the metadata that can be used during SQL analysis.
+    /filterRelationTypes: optional, supported types: fdd，fdr，join，call，er，seperated by comma if multiple values are specified.
 
-      /transform: optional, includind the code that do the transform.
+    /graph: optional, automatically open web browser to show the data lineage diagram.
+    /er: optional, automatically open web browser to show the ER diagram.
+  ```
 
-      /coor: optional, whether including the coordinate in the output.
+### 一括データリネージ分析
 
-      /defaultDatabase: optional, specify a default database.
+指定ディレクトリ直下の全サブディレクトリに対して、データリネージ分析をディレクトリモード（/d）で実行します。
 
-      /defaultSchema: optional, specify a default schema.
+```bash
+docker run --rm \
+  -v /path/to/your/projects:/app/projects \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  bulk_dlineage projects/ [dlineage-options]
 
-      /showImplicitSchema: optional, Display the schema information inferred from the SQL statement.
-
-      /showConstant: optional, whether show constant.
-
-      /treatArgumentsInCountFunctionAsDirectDataflow: optional,treate column used in count function as a direct dataflow.
-
-      /filterRelationTypes: optional, supported types: fdd，fdr，join，call，er，seperated by comma if multiple values are specified.
-
-      /graph: optional, automatically open web browser to show the data lineage diagram.
-      /er: optional, automatically open web browser to show the ER diagram.
-	  
-	  
-### Export metadata from various databases.
-You can export metadata from the database using [SQLFlow ingester](https://github.com/sqlparser/sqlflow_public/releases) 
-and hand it over to Gudu SQLFlow for data lineage analysis.。
-
-[Document of the SQLFlow ingester](https://docs.gudusoft.com/6.-sqlflow-ingester/introduction)
-
-## Trouble shooting
-
-
-### 1. SystemError: java.lang.ClassNotFoundException: org.jpype.classloader.DynamicClassLoader
-
-```
-Traceback (most recent call last):
-File "/home/grq/python_data_lineage/dlineage.py", line 231, in <module>
-call_dataFlowAnalyzer(args)
-File "/home/grq/python_data_lineage/dlineage.py", line 20, in call_dataFlowAnalyzer
-jpype.startJVM(jvm, "-ea", jar)
-File "/usr/lib/python3/dist-packages/jpype/_core.py", line 224, in startJVM
-_jpype.startup(jvmpath, tuple(args),
-SystemError: java.lang.ClassNotFoundException: org.jpype.classloader.DynamicClassLoader
+# 実行中のコンテナで起動する場合
+docker exec -it sqlflow \
+  bulk_dlineage /path/to/directories [dlineage-options]
 ```
 
-This problem is related to python3 jpype on ubuntu system. It seems that org.jpype.jar file is missing under /usr/lib/python3/dist-packages/
-just copy org.jpype.jar to /usr/lib/python3/dist-packages/
+### DELETE/TRUNCATE文抽出
 
-```
-cp /usr/share/java/org.jpype.jar /usr/lib/python3/dist-packages/org.jpype.jar
+SQLファイルからDELETE文とTRUNCATE文を抽出してCSV形式で出力します。
+
+```bash
+docker run --rm \
+  -v /path/to/your/sql:/app/sql \
+  -v /path/to/output:/app/output \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  analyze_delete sql/your_file.sql --output output/
+
+# 実行中のコンテナで起動する場合
+docker exec -it sqlflow \
+  analyze_delete test.sql --output output/
 ```
 
-## Contact
-For further information, please contact support@gudusoft.com
+- 出力例：`元ファイル名_delete.csv`
+  ```csv
+  ファイル,delete/truncate,テーブル,条件
+  test.sql,delete,emp,empno = 7369
+  test.sql,truncate,temp_table,-
+  ```
+
+### SQL分割
+
+複雑なSQLファイルをDDL、CTE、サブクエリ、メインクエリに分割します。
+
+```bash
+docker run --rm \
+  -v /path/to/your/sql:/app/sql \
+  -v /path/to/output:/app/output \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  split sql/your_file.sql output/
+
+# 実行中のコンテナで起動する場合
+docker exec -it sqlflow \
+  split test.sql output/
+```
+
+- 出力ファイル例：
+  - `元ファイル名_01.sql` - DDL文
+  - `元ファイル名_02.sql` - CTE（WITH句）
+  - `元ファイル名_03.sql` - 抽出されたサブクエリ
+  - `元ファイル名_main.sql` - メインクエリ

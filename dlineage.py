@@ -3,6 +3,7 @@ import os
 import webbrowser
 import jpype
 import sys
+from datetime import datetime
 
 def get_file_character_count(file_path):
     character_count = 0
@@ -39,6 +40,14 @@ def save_to_file(file_name, contents):
     fh = open(file_name, 'w')
     fh.write(contents)
     fh.close()
+
+def generate_output_filename(input_path):
+    """Generate output JSON filename based on input file/directory name"""
+    base_name = os.path.basename(input_path)
+    if os.path.isfile(input_path):
+        # Remove file extension
+        base_name = os.path.splitext(base_name)[0]
+    return f"lineageGraph_{base_name}.json"
 
 def call_dataFlowAnalyzer(args):
     # Start the Java Virtual Machine (JVM)
@@ -216,7 +225,21 @@ def call_dataFlowAnalyzer(args):
             DataFlowGraphGenerator = jpype.JClass("gudusoft.gsqlparser.dlineage.graph.DataFlowGraphGenerator")
             generator = DataFlowGraphGenerator()
             result = generator.genDlineageGraph(vendor, False, dataflow)
-            save_to_file("widget/json/lineageGraph.json", str(result))
+            # Generate output filename based on input file/directory
+            input_path = None
+            if indexOf(args, "/f") != -1 and len(args) > indexOf(args, "/f") + 1:
+                input_path = args[indexOf(args, "/f") + 1]
+            elif indexOf(args, "/d") != -1 and len(args) > indexOf(args, "/d") + 1:
+                input_path = args[indexOf(args, "/d") + 1]
+            
+            if input_path:
+                output_filename = generate_output_filename(input_path)
+            else:
+                output_filename = "lineageGraph_default.json"
+            
+            output_path = f"widget/json/{output_filename}"
+            save_to_file(output_path, str(result))
+            print(f"JSON output saved to: {output_path}")
             webbrowser.open_new(widget_server_url)
         errors = dlineage.getErrorMessages()
         if not errors.isEmpty():
