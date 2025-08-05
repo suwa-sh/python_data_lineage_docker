@@ -24,7 +24,7 @@ docker exec -it sqlflow \
   /t oracle /f test.sql /graph
 ```
 
-- 引数
+- options
 
   ```sh
     /t: Required, specify the database type
@@ -127,7 +127,8 @@ docker exec -it sqlflow \
 
 ### SQL分割
 
-複雑なSQLファイルをDDL、CTE、サブクエリ、メインクエリに分割します。
+複雑なSQLファイルをDDL、CTE、サブクエリ、メインクエリに分割します。  
+ファイル名の昇順にソートして連結すると、元ファイルと同じ定義内容になります。
 
 ```bash
 docker run --rm \
@@ -144,5 +145,5 @@ docker exec -it sqlflow \
 - 出力ファイル例：
   - `元ファイル名_01.sql` - DDL文
   - `元ファイル名_02.sql` - CTE（WITH句）
-  - `元ファイル名_03.sql` - 抽出されたサブクエリ
+  - `元ファイル名_03.sql` - 抽出されたサブクエリ(WITH句として抽出)
   - `元ファイル名_main.sql` - メインクエリ
