@@ -27,8 +27,9 @@ def run_dlineage_for_directory(dir_path, dlineage_args, verbose=False):
     try:
         result = subprocess.run(
             cmd,
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             check=True
         )
         

@@ -13,7 +13,7 @@ DELETE文・TRUNCATE文の抽出テスト
 
 ```bash
 # test_delete_truncate.sql からDELETE/TRUNCATE文を抽出
-python analyze_delete.py test/input/test_delete_truncate.sql --output test/output/
+python analyze_delete.py test/input/test_delete_truncate.sql test/output/
 
 # 結果確認
 cat test/output/test_delete_truncate_delete.csv
@@ -96,7 +96,7 @@ cd ../../..
 make build
 
 # Docker環境でanalyze_delete.pyをテスト
-docker run --rm -v $(pwd):/app python_data_lineage_docker python analyze_delete.py test/input/test_delete_truncate.sql --output test/output/
+docker run --rm -v $(pwd):/app python_data_lineage_docker python analyze_delete.py test/input/test_delete_truncate.sql test/output/
 
 # Docker環境でsplit.pyをテスト
 docker run --rm -v $(pwd):/app python_data_lineage_docker python split.py test/input/test_split.sql test/output/

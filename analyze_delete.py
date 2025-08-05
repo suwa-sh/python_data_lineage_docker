@@ -117,7 +117,7 @@ def write_csv(results: List[Dict[str, str]], output_path: str):
 def main():
     parser = argparse.ArgumentParser(description='Extract DELETE and TRUNCATE statements from SQL file')
     parser.add_argument('sql_file', help='Path to SQL file')
-    parser.add_argument('--output', '-o', help='Output directory (default: current directory)', default='.')
+    parser.add_argument('output_dir', nargs='?', default='.', help='Output directory (default: current directory)')
     
     args = parser.parse_args()
     
@@ -127,14 +127,14 @@ def main():
         sys.exit(1)
     
     # Create output directory if it doesn't exist
-    os.makedirs(args.output, exist_ok=True)
+    os.makedirs(args.output_dir, exist_ok=True)
     
     # Analyze SQL file
     results = analyze_sql_file(args.sql_file)
     
     # Generate output filename
     base_name = os.path.splitext(os.path.basename(args.sql_file))[0]
-    output_file = os.path.join(args.output, f"{base_name}_delete.csv")
+    output_file = os.path.join(args.output_dir, f"{base_name}_delete.csv")
     
     # Write results to CSV
     write_csv(results, output_file)

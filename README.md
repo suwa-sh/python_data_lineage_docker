@@ -1,11 +1,19 @@
 # Gudu SQLFlow Lite version for docker
 
-### サーバー起動
+### 最新バージョン取得
+
+```bash
+docker image pull \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest
+```
+
+### webサーバー起動
 
 ```bash
 docker run -d \
-  -p 8000:8000 \
   --name sqlflow \
+  -p 8000:8000 \
+  -v .:/app \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest
 
 open http://localhost:8000
@@ -15,13 +23,15 @@ open http://localhost:8000
 
 ```bash
 docker run -it --rm \
-  -v /path/to/your/sql:/app/sql \
+  -v .:/app \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  /t oracle /f sql/your_file.sql /graph
+  [options]
 
-# 実行中のコンテナで起動する場合
-docker exec -it sqlflow \
-  /t oracle /f test.sql /graph
+# sample
+docker run -it --rm \
+  -v .:/app \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  /t oracle /f samples/oracle_plsql.sql /graph
 ```
 
 - options
@@ -87,38 +97,24 @@ docker exec -it sqlflow \
     /er: optional, automatically open web browser to show the ER diagram.
   ```
 
-### 一括データリネージ分析
-
-指定ディレクトリ直下の全サブディレクトリに対して、データリネージ分析をディレクトリモード（/d）で実行します。
-
-```bash
-docker run --rm \
-  -v /path/to/your/projects:/app/projects \
-  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  bulk_dlineage projects/ [dlineage-options]
-
-# 実行中のコンテナで起動する場合
-docker exec -it sqlflow \
-  bulk_dlineage /path/to/directories [dlineage-options]
-```
-
 ### DELETE/TRUNCATE文抽出
 
 SQLファイルからDELETE文とTRUNCATE文を抽出してCSV形式で出力します。
 
 ```bash
-docker run --rm \
-  -v /path/to/your/sql:/app/sql \
-  -v /path/to/output:/app/output \
+docker run -it --rm \
+  -v .:/app \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  analyze_delete sql/your_file.sql --output output/
+  analyze_delete INPUT_FILE [OUTPUT_DIR]
 
-# 実行中のコンテナで起動する場合
-docker exec -it sqlflow \
-  analyze_delete test.sql --output output/
+# sample
+docker run -it --rm \
+  -v .:/app \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  analyze_delete test/input/test_delete_truncate.sql test/output/
 ```
 
-- 出力例：`元ファイル名_delete.csv`
+- 出力例：`{OUTPUT_DIR}/{INPUT_FILE_NAME}_delete.csv`
   ```csv
   ファイル,delete/truncate,テーブル,条件
   test.sql,delete,emp,empno = 7369
@@ -131,15 +127,16 @@ docker exec -it sqlflow \
 ファイル名の昇順にソートして連結すると、元ファイルと同じ定義内容になります。
 
 ```bash
-docker run --rm \
-  -v /path/to/your/sql:/app/sql \
-  -v /path/to/output:/app/output \
+docker run -it --rm \
+  -v .:/app \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  split sql/your_file.sql output/
+  split INPUT_FILE [OUTPUT_DIR]
 
 # 実行中のコンテナで起動する場合
-docker exec -it sqlflow \
-  split test.sql output/
+docker run -it --rm \
+  -v .:/app \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  split test/input/test_split.sql test/output/
 ```
 
 - 出力ファイル例：
@@ -147,3 +144,22 @@ docker exec -it sqlflow \
   - `元ファイル名_02.sql` - CTE（WITH句）
   - `元ファイル名_03.sql` - 抽出されたサブクエリ(WITH句として抽出)
   - `元ファイル名_main.sql` - メインクエリ
+
+### 一括データリネージ分析
+
+指定ディレクトリ直下の全サブディレクトリに対して、データリネージ分析をディレクトリモード（/d）で実行します。  
+SQL分割機能の結果を一括で分析できます。  
+`/graph`オプションをつけておけば、起動中のwebサーバーで結果を選んで可視化できます。
+
+```bash
+docker run -it --rm \
+  -v .:/app \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  bulk_dlineage test/output [dlineage-options]
+
+# sample
+docker run -it --rm \
+  -v .:/app \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  bulk_dlineage test/output /t oracle /graph
+```
