@@ -39,7 +39,7 @@
                 if (!selectedFile) return;
                 
                 try {
-                    const json = await fetch(`json/${selectedFile}`).then(res => res.json());
+                    const json = await fetch(`data/output/dlineage/${selectedFile}`).then(res => res.json());
                     sqlflow.visualizeJSON(json, { layout: true });
                 } catch (error) {
                     console.error('Error loading JSON file:', error);

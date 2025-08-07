@@ -1,7 +1,7 @@
 .PHONY: build run stop clean help
 
 # Docker image name
-IMAGE_NAME := python_data_lineage_docker
+IMAGE_NAME := ghcr.io/suwa-sh/python_data_lineage_docker
 
 # Default target
 .DEFAULT_GOAL := help

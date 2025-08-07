@@ -1,0 +1,6 @@
+ファイル,delete/truncate,テーブル,条件
+test_delete_truncate.sql,delete,emp,empno = 7369
+test_delete_truncate.sql,delete,emp,deptno IN ( SELECT deptno FROM dept WHERE loc = 'BOSTON' )
+test_delete_truncate.sql,delete,emp,d.loc = 'BOSTON'
+test_delete_truncate.sql,truncate,temp_table,-
+test_delete_truncate.sql,truncate,scott.emp,-

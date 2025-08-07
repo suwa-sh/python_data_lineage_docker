@@ -161,5 +161,7 @@ cython_debug/
 /.idea
 
 # test data
-test/output/
-widget/json/lineageGraph_*
+data/output/dlineage/lineageGraph_*.json
+data/output/analyze_delete/
+data/output/split/
+

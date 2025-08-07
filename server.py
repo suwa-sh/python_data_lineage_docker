@@ -14,6 +14,9 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == "/api/json-files":
             # JSONファイルのリストを返す
             self.send_json_file_list()
+        elif self.path == "/api/er-json-files":
+            # ER図のJSONファイルのリストを返す
+            self.send_er_json_file_list()
         else:
             # 通常のファイルサービング
             super().do_GET()
@@ -22,11 +25,31 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         """json/ディレクトリ内のJSONファイルリストを返す"""
         try:
             # json/ディレクトリ内のJSONファイルを検索
-            json_files = glob.glob("json/lineageGraph_*.json")
+            json_files = glob.glob("data/output/dlineage/lineageGraph_*.json")
             # ファイル名のみを取得
             file_names = [os.path.basename(f) for f in json_files]
             # 更新時刻でソート（新しい順）
-            file_names.sort(key=lambda f: os.path.getmtime(f"json/{f}"), reverse=True)
+            file_names.sort(key=lambda f: os.path.getmtime(f"data/output/dlineage/{f}"), reverse=True)
+            
+            # レスポンスを送信
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(file_names).encode())
+        except Exception as e:
+            self.send_error(500, f"Internal Server Error: {str(e)}")
+    
+    def send_er_json_file_list(self):
+        """ER図のJSONファイルリストを返す"""
+        try:
+            # data/output/dlineage/ディレクトリ内のER図JSONファイルを検索
+            json_files = glob.glob("data/output/dlineage/erGraph_*.json")
+            # ファイル名のみを取得
+            file_names = [os.path.basename(f) for f in json_files]
+            # 更新時刻でソート（新しい順）
+            if file_names:
+                file_names.sort(key=lambda f: os.path.getmtime(f"data/output/dlineage/{f}"), reverse=True)
             
             # レスポンスを送信
             self.send_response(200)

@@ -1,5 +1,14 @@
 # Gudu SQLFlow Lite version for docker
 
+### サンプルコマンドの想定ディレクトリ構成
+
+```txt
+data/
+  input/      - 分析対象のSQLファイル
+  output/     - 出力ディレクトリ
+    dlineage/ - 分析結果、webサーバーの可視化対象
+```
+
 ### 最新バージョン取得
 
 ```bash
@@ -10,28 +19,40 @@ docker image pull \
 ### webサーバー起動
 
 ```bash
-docker run -d \
+docker run --rm -d \
   --name sqlflow \
   -p 8000:8000 \
-  -v .:/app \
+  -v ./data:/app/widget/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest
 
+# データリネージ
 open http://localhost:8000
+# ER図
+open http://localhost:8000/er.html
+
+
+# 停止する場合
+docker container stop sqlflow
 ```
 
 ### データリネージ分析
 
 ```bash
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
   [options]
 
 # sample
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  /t oracle /f samples/oracle_plsql.sql /graph
+  /t oracle /f data/input/samples/oracle_plsql.sql /graph
+
+docker run -it --rm \
+  -v ./data:/app/data \
+  ghcr.io/suwa-sh/python_data_lineage_docker:latest \
+  /t mssql /f data/input/samples/sqlserver_er.sql /er /graph
 ```
 
 - options
@@ -103,15 +124,15 @@ SQLファイルからDELETE文とTRUNCATE文を抽出してCSV形式で出力し
 
 ```bash
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
   analyze_delete INPUT_FILE [OUTPUT_DIR]
 
 # sample
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  analyze_delete test/input/test_delete_truncate.sql test/output/
+  analyze_delete data/input/test_delete_truncate.sql data/output/
 ```
 
 - 出力例：`{OUTPUT_DIR}/{INPUT_FILE_NAME}_delete.csv`
@@ -128,15 +149,15 @@ docker run -it --rm \
 
 ```bash
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
   split INPUT_FILE [OUTPUT_DIR]
 
 # 実行中のコンテナで起動する場合
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  split test/input/test_split.sql test/output/
+  split data/input/test_split.sql data/output/split
 ```
 
 - 出力ファイル例：
@@ -153,13 +174,13 @@ SQL分割機能の結果を一括で分析できます。
 
 ```bash
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  bulk_dlineage test/output [dlineage-options]
+  bulk_dlineage data/output/split [dlineage-options]
 
 # sample
 docker run -it --rm \
-  -v .:/app \
+  -v ./data:/app/data \
   ghcr.io/suwa-sh/python_data_lineage_docker:latest \
-  bulk_dlineage test/output /t oracle /graph
+  bulk_dlineage data/output/split /t oracle /graph
 ```

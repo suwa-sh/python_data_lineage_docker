@@ -183,7 +183,23 @@ def call_dataFlowAnalyzer(args):
             DataFlowGraphGenerator = jpype.JClass("gudusoft.gsqlparser.dlineage.graph.DataFlowGraphGenerator")
             generator = DataFlowGraphGenerator()
             result = generator.genERGraph(vendor, dataflow)
-            save_to_file("widget/json/erGraph.json", str(result))
+            
+            # Generate output filename based on input file/directory
+            input_path = None
+            if indexOf(args, "/f") != -1 and len(args) > indexOf(args, "/f") + 1:
+                input_path = args[indexOf(args, "/f") + 1]
+            elif indexOf(args, "/d") != -1 and len(args) > indexOf(args, "/d") + 1:
+                input_path = args[indexOf(args, "/d") + 1]
+            
+            if input_path:
+                base_name = os.path.basename(input_path).replace('.sql', '').replace('.', '_')
+                output_filename = f"erGraph_{base_name}.json"
+            else:
+                output_filename = "erGraph_default.json"
+            
+            output_path = f"data/output/dlineage/{output_filename}"
+            save_to_file(output_path, str(result))
+            print(f"ER graph output saved to: {output_path}")
             webbrowser.open_new(widget_server_url + "/er.html")
             return
         elif tableLineage:
@@ -237,7 +253,7 @@ def call_dataFlowAnalyzer(args):
             else:
                 output_filename = "lineageGraph_default.json"
             
-            output_path = f"widget/json/{output_filename}"
+            output_path = f"data/output/dlineage/{output_filename}"
             save_to_file(output_path, str(result))
             print(f"JSON output saved to: {output_path}")
             webbrowser.open_new(widget_server_url)
